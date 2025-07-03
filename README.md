@@ -63,9 +63,5 @@ This repository contains three projects related to distributed applications, dev
 - Project 3 uses SSL/TLS certificates for secure communication.
 - Certificate and key files are included for demonstration purposes.
 
-## Author
-- Student ID: 62372
-- Course: AD2425 - Distributed Applications
-
 ## License
 This repository is for educational purposes.
