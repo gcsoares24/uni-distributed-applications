@@ -1,67 +1,37 @@
-# Distributed Applications Projects
+# CoinCenter: 3 Distributed Systems Labs
 
-This repository contains three projects related to distributed applications, developed for the AD2425 course. Each project demonstrates different aspects of distributed systems, networking, and security.
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Sockets](https://img.shields.io/badge/TCP%20Sockets-4B8BBE?style=for-the-badge&logo=cachet&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+![SSL/TLS](https://img.shields.io/badge/TLS%2FSSL-721412?style=for-the-badge&logo=letsencrypt&logoColor=white)
+![Apache ZooKeeper](https://img.shields.io/badge/Apache%20ZooKeeper-231F20?style=for-the-badge&logo=apache&logoColor=white)
 
-## Projects Overview
+> 📖 Quick note in Portuguese: You can also read this README in Portuguese. To do so, just access [here](README.pt.md).
 
-### 1. Projeto 1
-- **Folder:** `ad2425_projeto1_aluno-62372/`
-- **Description:**
-  - Implements basic client-server communication using sockets.
-  - Files include: `coincenter_client.py`, `coincenter_server.py`, `net_client.py`, `net_server.py`, `sock_utils.py`, and `coincenter_data.py`.
+## About the project
 
-### 2. Projeto 2
-- **Folder:** `ad2425_projeto2_aluno-62372/`
-- **Description:**
-  - Extends the first project with stubs and skeletons for remote method invocation.
-  - Adds files: `coincenter_skel.py`, `coincenter_stub.py`.
-  - Continues to use and improve upon the networking and data handling modules.
+This repository holds three incremental lab projects built for the **Distributed Applications** (*Aplicações Distribuídas*) course, academic year 24/25. All three implement the same domain — **CoinCenter**, a small cryptocurrency exchange simulator with a manager role (who lists/adds/removes assets) and user roles (who deposit, withdraw, buy and sell) — while progressively layering on more distributed-systems concepts: from raw sockets, to an RPC-style stub/skeleton split with concurrent I/O, to a full REST service with persistence, mutual TLS and distributed coordination.
 
-### 3. Projeto 3
-- **Folder:** `ad2425_projeto3_aluno62372/`
-- **Description:**
-  - Introduces database integration and security with SSL/TLS.
-  - Includes a Flask-based server (`coincenter_flask.py`), database setup scripts, and certificate/key files for secure communication.
-  - Files include: `setup_db.py`, `bd.sql`, `coincenter_utils.py`, and various certificate/key files.
+### Features
 
-## Getting Started
+- **Projeto 1 — Raw TCP sockets**
+  Implements the CoinCenter client/server directly over `socket` (`sock_utils.py`), with a custom length-prefixed wire protocol (`net_client.py` / `net_server.py`): a 4-byte size header followed by a `pickle`-serialized payload. The domain logic (`coincenter_data.py`) models `Manager` and `User` clients that exchange semicolon-delimited text commands (`ADD_ASSET`, `BUY`, `SELL`, `DEPOSIT`, `WITHDRAW`, `GET_ASSETS_BALANCE`, ...).
 
-### Requirements
-- Python 3.x
-- Flask (for Project 3)
-- SQLite (for Project 3)
+- **Projeto 2 — Stub/skeleton (RPC-style) + I/O multiplexing**
+  Refactors the same domain into a client-side **stub** (`coincenter_stub.py`) that turns menu commands into numeric-coded request lists, and a server-side **skeleton** (`coincenter_skel.py`) that dispatches them to the matching handler — a classic RPC/RMI-style separation between the calling interface and the remote implementation. The server (`coincenter_server.py`) also moves from one blocking connection to `select()`-based I/O multiplexing, so it can serve several clients concurrently on a single thread.
 
-### Running the Projects
+- **Projeto 3 — REST API, SQLite, mutual TLS and ZooKeeper**
+  Reimplements CoinCenter as an HTTPS REST API with **Flask** (`coincenter_flask.py`), persisting clients, assets, holdings and a transaction log in a **SQLite** database (`setup_db.py`, `bd.sql`). The channel is secured with **mutual TLS**: a self-signed root CA issues both the server certificate (`serv.crt`/`serv.key`) and the client certificate (`cli.crt`/`cli.key`), and the Flask server requires and verifies the client cert (`ssl.CERT_REQUIRED`). It also integrates **Apache ZooKeeper** through the `kazoo` client: new assets are published as ephemeral znodes under `/assets`, and connected user clients register a `ChildrenWatch` to get live notifications when the manager adds a new asset.
 
-#### Project 1 & 2
-1. Navigate to the respective project folder.
-2. Run the server:
-   ```bash
-   python3 coincenter_server.py
-   ```
-3. In another terminal, run the client:
-   ```bash
-   python3 coincenter_client.py
-   ```
+### Tech stack
 
-#### Project 3
-1. Navigate to `ad2425_projeto3_aluno62372/`.
-2. Set up the database:
-   ```bash
-   python3 setup_db.py
-   ```
-3. Start the Flask server (with SSL):
-   ```bash
-   python3 coincenter_flask.py
-   ```
-4. Run the client:
-   ```bash
-   python3 coincenter_client.py
-   ```
-
-## Security
-- Project 3 uses SSL/TLS certificates for secure communication.
-- Certificate and key files are included for demonstration purposes.
-
-## License
-This repository is for educational purposes.
+- Python 3
+- Raw TCP sockets (`socket`) with a custom length-prefixed, `pickle`-based framing protocol
+- Client/server stub-skeleton (RPC/RMI-style) architecture
+- I/O multiplexing with `select()`
+- Flask (REST/HTTPS API)
+- SQLite (`sqlite3`)
+- Mutual TLS authentication with self-signed certificates (Python `ssl` module)
+- Apache ZooKeeper via the `kazoo` client (distributed coordination, ephemeral nodes, watches)
+- `requests` (HTTP client library)
